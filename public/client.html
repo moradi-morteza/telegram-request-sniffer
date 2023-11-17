@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Client</title>
+</head>
+<body>
+<div class="container">
+    <h1 class="mt-5">WebSocket Client</h1>
+    <form id="message-form" class="mt-4">
+        <div class="input-group">
+            <input type="text" id="message-input" class="form-control" placeholder="Enter your message" />
+            <button type="submit" class="btn btn-primary">Send</button>
+        </div>
+    </form>
+</div>
+
+
+
+<script>
+
+    // Connect to local WebSocket server
+    const wsUrl = "ws://localhost:3000";
+    const socket = new WebSocket(wsUrl);
+
+    // Handle WebSocket connection open
+    socket.addEventListener('open', (event) => {
+        console.log('WebSocket connection established');
+    });
+
+    // Handle incoming messages
+    socket.addEventListener('message', (event) => {
+        console.log(`Received message: ${event.data}`);
+    });
+
+    // Handle WebSocket connection close
+    socket.addEventListener('close', (event) => {
+        console.log('WebSocket connection closed');
+    });
+
+    // Send a message to the server
+    const form = document.getElementById('message-form');
+    const messageInput = document.getElementById('message-input');
+
+    form.addEventListener('submit', (event) => {
+        event.preventDefault();
+
+        const message = messageInput.value;
+        socket.send(message);
+
+        // Clear the input field
+        messageInput.value = '';
+    });
+</script>
+</body>
+</html>

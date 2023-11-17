@@ -1,0 +1,16 @@
+# Tell GitHub this is primarily a Go project
+# Exclude Android integration files from language statistics
+
+# Mark Android integration as vendored (won't count in stats)
+android/* linguist-vendored
+
+# Mark documentation as documentation
+*.md linguist-documentation
+
+# Ensure Go is detected as the primary language
+*.go linguist-language=Go
+
+# Mark frontend assets appropriately
+public/*.js linguist-language=JavaScript
+public/*.html linguist-language=HTML
+public/*.css linguist-language=CSS

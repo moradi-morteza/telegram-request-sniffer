@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  telegram-request-sniffer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: telegram-request-sniffer:2.0.0
+    container_name: telegram-request-sniffer
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    networks:
+      - telegram-sniffer-network
+
+networks:
+  telegram-sniffer-network:
+    driver: bridge
