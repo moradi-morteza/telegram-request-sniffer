@@ -230,13 +230,13 @@ Edit `TelegramRequestSniffer.java` and update the server URL:
 
 ```java
 // For Android Emulator connecting to host machine:
-private static String serverUrl = "ws://10.0.2.2:3000";
+private static String serverUrl = "ws://10.0.2.2:3000/ws";
 
 // For real device on same WiFi (replace with your computer's IP):
-private static String serverUrl = "ws://192.168.1.100:3000";
+private static String serverUrl = "ws://192.168.1.100:3000/ws";
 
 // For production server with SSL:
-private static String serverUrl = "wss://your-server.com";
+private static String serverUrl = "wss://your-server.com/ws";
 
 // Set a unique client identifier:
 private static String clientId = "my-test-device";

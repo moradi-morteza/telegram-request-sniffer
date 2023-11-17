@@ -42,10 +42,10 @@ public class TelegramRequestSniffer {
     private static WebSocketClient webSocketClient;
 
     // TODO: Replace with your actual server URL
-    // For emulator: ws://10.0.2.2:3000
-    // For real device: ws://YOUR_COMPUTER_IP:3000
-    // For production: wss://your-server.com
-    private static String serverUrl = "ws://10.0.2.2:3000";
+    // For emulator: ws://10.0.2.2:3000/ws
+    // For real device: ws://YOUR_COMPUTER_IP:3000/ws
+    // For production: wss://your-server.com/ws
+    private static String serverUrl = "ws://10.0.2.2:3000/ws";
 
     // TODO: Set a unique client identifier for this device
     private static String clientId = "my-device-id";
