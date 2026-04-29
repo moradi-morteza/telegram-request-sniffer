@@ -35,36 +35,37 @@ new Vue({
             let token = jsonObject.TOKEN;
             let type = jsonObject.TYPE;
 
-            // if (type==="Request"){
-            // set data to Json bottomSheet
-            const requestView = document.getElementById("requestView")
+            const requestView = document.getElementById("requestView");
+            const responseView = document.getElementById("responseView");
             requestView.innerHTML = "";
-            const requestViewEditor = new JSONEditor(requestView)
-            requestViewEditor.set(jsonObject)
-            this.requestJsonContainer = jsonObject;
+            responseView.innerHTML = "";
 
-            // find response if exist
-            let responseJsons = this.messages.filter(item => {
-                return item.TOKEN === token && item.TYPE === "RESPONSE";
-            })
-            if (responseJsons !== null && responseJsons.length > 0) {
-                // create the editor
-                const responseView = document.getElementById("responseView")
-                responseView.innerHTML = "";
+            if (type === "RESPONSE") {
+                // Left: correlated request, Right: this response
+                let requestJson = this.messages.find(item => item.TOKEN === token && item.TYPE === "REQUEST");
+                if (requestJson) {
+                    const editor = new JSONEditor(requestView);
+                    editor.set(requestJson);
+                    this.requestJsonContainer = requestJson;
+                }
+                const editor = new JSONEditor(responseView);
+                editor.set(jsonObject);
+                this.responseJsonContainer = jsonObject;
+            } else {
+                // Left: clicked item (REQUEST / SERVER / ERROR), Right: correlated response if any
+                const editor = new JSONEditor(requestView);
+                editor.set(jsonObject);
+                this.requestJsonContainer = jsonObject;
+
+                let responseJsons = this.messages.filter(item => item.TOKEN === token && item.TYPE === "RESPONSE");
                 this.responseJsonContainer = responseJsons;
                 responseJsons.forEach(responseJson => {
-                    const responseViewEditor = new JSONEditor(responseView)
-                    responseViewEditor.set(responseJson)
-                })
-            }else{
-                const responseView = document.getElementById("responseView")
-                responseView.innerHTML = "";
+                    const responseViewEditor = new JSONEditor(responseView);
+                    responseViewEditor.set(responseJson);
+                });
             }
 
-
-            // get json
             this.$refs.myBottomSheet.open();
-
         },
         exportMessages() {
             if (this.messages.length === 0) {
