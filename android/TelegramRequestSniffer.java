@@ -117,6 +117,9 @@ public class TelegramRequestSniffer {
             for (Field field : fields) {
                 field.setAccessible(true);
                 String name = field.getName();
+                if (name.startsWith("FLAG_")) {
+                    continue;
+                }
                 try {
                     Object value = field.get(object);
                     if (value != null) {
@@ -236,20 +239,65 @@ public class TelegramRequestSniffer {
 }
 
 /*
-inside ConnectionManager add TelegramRequestSniffer.logTlRPCObject at first and also hande answer like :
+ HOW TO HOOK INTO ConnectionManager (new Telegram Android structure)
+ =====================================================================
 
-Utilities.stageQueue.postRunnable(() -> {
-        if (onComplete != null) {
-->            TelegramRequestSniffer.logTLRPCObject(finalResponse, "RESPONSE", requestToken);
-->            if (finalError!=null){
-->                TelegramRequestSniffer.logTLRPCObject(finalError, "ERROR", requestToken);
-->            }
-            onComplete.run(finalResponse, finalError);
-        } else if (onCompleteTimestamp != null) {
-            onCompleteTimestamp.run(finalResponse, finalError, timestamp);
-        }
-        if (finalResponse != null) {
-            finalResponse.freeResources();
-        }
-    });
+ Inside sendRequestInternal(), two places need to be patched:
+
+ ── 1. LOG REQUEST ──────────────────────────────────────────────────
+ Add right before the native_sendRequest(...) call at the bottom of
+ sendRequestInternal():
+
+     // --- TelegramRequestSniffer ---
+->  TelegramRequestSniffer.logTLRPCObject(object, "REQUEST", requestToken);
+     native_sendRequest(currentAccount, buffer.address, flags, datacenterId, connectionType, immediate, requestToken);
+
+ ── 2. LOG RESPONSE / ERROR ─────────────────────────────────────────
+ Inside the listen(...) lambda, patch the Utilities.stageQueue.postRunnable
+ block that calls onComplete:
+
+     Utilities.stageQueue.postRunnable(() -> {
+         // --- TelegramRequestSniffer ---
+->      if (finalResponse != null) {
+->          TelegramRequestSniffer.logTLRPCObject(finalResponse, "RESPONSE", requestToken);
+->      }
+->      if (finalError != null) {
+->          TelegramRequestSniffer.logTLRPCObject(finalError, "ERROR", requestToken);
+->      }
+         if (onComplete != null) {
+             onComplete.run(finalResponse, finalError);
+         } else if (onCompleteTimestamp != null) {
+             onCompleteTimestamp.run(finalResponse, finalError, timestamp);
+         } else if (finalResponse instanceof TLRPC.Updates) {
+             KeepAliveJob.finishJob();
+             AccountInstance.getInstance(currentAccount).getMessagesController().processUpdates((TLRPC.Updates) finalResponse, false);
+         }
+         if (finalResponse != null) {
+             finalResponse.freeResources();
+         }
+     });
+
+ NOTE: In the new version, TLRPC.TL_error is not a TLObject, so logTLRPCObject
+ cannot accept it directly. Either skip error logging or add a separate helper
+ method logError(TLRPC.TL_error error, int token) that builds the JSON manually:
+
+     public static void logError(TLRPC.TL_error error, int requestToken) {
+         if (singleInstance == null || error == null) return;
+         try {
+             JSONObject json = new JSONObject();
+             json.put("CLIENTID", clientId);
+             json.put("TYPE", "ERROR");
+             json.put("TOKEN", requestToken);
+             json.put("TIME", getCurrentTime());
+             json.put("CLASS_NAME", "TL_error");
+             json.put("code", error.code);
+             json.put("text", error.text);
+             deliverLog(json.toString());
+         } catch (JSONException e) {
+             Log.e(TAG, "logError failed: " + e.getMessage());
+         }
+     }
+
+ Then call it as:
+->  TelegramRequestSniffer.logError(finalError, requestToken);
  */

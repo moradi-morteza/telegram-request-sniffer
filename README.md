@@ -286,32 +286,42 @@ public void processUpdates(final TLRPC.Updates updates, boolean fromQueue) {
 
 #### B. Log Requests and Responses
 
-In `ConnectionsManager.java`, find the `sendRequest()` method:
+In `ConnectionsManager.java`, find the `sendRequestInternal()` method (new Telegram structure):
+
+**1 — Log the outgoing request** (just before `native_sendRequest` at the bottom of `sendRequestInternal`):
 
 ```java
-public int sendRequest(final TLObject object, ...) {
-    final int requestToken = lastRequestToken.getAndIncrement();
+// Log outgoing request
+TelegramRequestSniffer.logTLRPCObject(object, "REQUEST", requestToken);
+native_sendRequest(currentAccount, buffer.address, flags, datacenterId, connectionType, immediate, requestToken);
+```
 
-    // Log the outgoing request
-    TelegramRequestSniffer.logTLRPCObject(object, "Request", requestToken);
+**2 — Log the response/error** inside the `listen(...)` lambda, at the top of `Utilities.stageQueue.postRunnable`:
 
-    // ... existing code ...
+```java
+Utilities.stageQueue.postRunnable(() -> {
+    // Log response and error
+    if (finalResponse != null) {
+        TelegramRequestSniffer.logTLRPCObject(finalResponse, "RESPONSE", requestToken);
+    }
+    if (finalError != null) {
+        TelegramRequestSniffer.logError(finalError, requestToken);
+    }
+    if (onComplete != null) {
+        onComplete.run(finalResponse, finalError);
+    } else if (onCompleteTimestamp != null) {
+        onCompleteTimestamp.run(finalResponse, finalError, timestamp);
+    } else if (finalResponse instanceof TLRPC.Updates) {
+        KeepAliveJob.finishJob();
+        AccountInstance.getInstance(currentAccount).getMessagesController().processUpdates((TLRPC.Updates) finalResponse, false);
+    }
+    if (finalResponse != null) {
+        finalResponse.freeResources();
+    }
+});
+```
 
-    // Inside the response handler:
-    native_sendRequest(currentAccount, buffer.address, (response, errorCode, errorText, ...) -> {
-        // ... parse response ...
-
-        // Log the response
-        TelegramRequestSniffer.logTLRPCObject(finalResponse, "Response", requestToken);
-
-        // Log errors if any
-        if (error != null) {
-            TelegramRequestSniffer.logTLRPCObject(error, "Error", requestToken);
-        }
-
-        // ... rest of handler ...
-    });
-}
+> **Note:** `TLRPC.TL_error` is not a `TLObject` in the new Telegram version, so it cannot be passed to `logTLRPCObject`. Use the `logError()` helper method included in `TelegramRequestSniffer.java` instead.
 ```
 
 ### Step 6: Build and Run
