@@ -300,14 +300,14 @@ native_sendRequest(currentAccount, buffer.address, flags, datacenterId, connecti
 
 ```java
 Utilities.stageQueue.postRunnable(() -> {
-    // Log response and error
-    if (finalResponse != null) {
-        TelegramRequestSniffer.logTLRPCObject(finalResponse, "RESPONSE", requestToken);
-    }
-    if (finalError != null) {
-        TelegramRequestSniffer.logError(finalError, requestToken);
-    }
     if (onComplete != null) {
+        // Log response and error
+        if (finalResponse != null) {
+            TelegramRequestSniffer.logTLRPCObject(finalResponse, "RESPONSE", requestToken);
+        }
+        if (finalError != null) {
+            TelegramRequestSniffer.logTLRPCObject(finalError,"ERROR", requestToken);
+        }
         onComplete.run(finalResponse, finalError);
     } else if (onCompleteTimestamp != null) {
         onCompleteTimestamp.run(finalResponse, finalError, timestamp);

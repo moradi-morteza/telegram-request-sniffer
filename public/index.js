@@ -11,6 +11,7 @@ new Vue({
         query: "",
         hold: false,
         clientId: "",
+        hideFileUploads: false,
         messages: []
     },
     methods: {
@@ -40,8 +41,8 @@ new Vue({
             requestView.innerHTML = "";
             responseView.innerHTML = "";
 
-            if (type === "RESPONSE") {
-                // Left: correlated request, Right: this response
+            if (type === "RESPONSE" || type === "ERROR") {
+                // Left: correlated request, Right: this response/error
                 let requestJson = this.messages.find(item => item.TOKEN === token && item.TYPE === "REQUEST");
                 if (requestJson) {
                     const editor = new JSONEditor(requestView);
@@ -52,12 +53,12 @@ new Vue({
                 editor.set(jsonObject);
                 this.responseJsonContainer = jsonObject;
             } else {
-                // Left: clicked item (REQUEST / SERVER / ERROR), Right: correlated response if any
+                // Left: clicked item (REQUEST / SERVER), Right: correlated response/error if any
                 const editor = new JSONEditor(requestView);
                 editor.set(jsonObject);
                 this.requestJsonContainer = jsonObject;
 
-                let responseJsons = this.messages.filter(item => item.TOKEN === token && item.TYPE === "RESPONSE");
+                let responseJsons = this.messages.filter(item => item.TOKEN === token && (item.TYPE === "RESPONSE" || item.TYPE === "ERROR"));
                 this.responseJsonContainer = responseJsons;
                 responseJsons.forEach(responseJson => {
                     const responseViewEditor = new JSONEditor(responseView);
@@ -139,6 +140,7 @@ new Vue({
     created() {
         this.clientId = localStorage.getItem('clientId') || "";
         this.messageTypeFilter = localStorage.getItem('messageTypeFilter') || "all";
+        this.hideFileUploads = localStorage.getItem('hideFileUploads') === 'true';
     },
     computed: {
         filteredData() {
@@ -150,6 +152,12 @@ new Vue({
                     message => message.TYPE === this.messageTypeFilter
                 );
             }
+
+            if (this.hideFileUploads) {
+                filteredMessages = filteredMessages.filter(
+                    message => message.CLASS_NAME !== 'TL_upload_getFile' && message.CLASS_NAME !== 'TL_upload_file'
+                );
+            }
             return filteredMessages;
         },
     },
@@ -159,6 +167,9 @@ new Vue({
         },
         messageTypeFilter(newVal) {
             localStorage.setItem('messageTypeFilter', newVal);
+        },
+        hideFileUploads(newVal) {
+            localStorage.setItem('hideFileUploads', newVal);
         }
     }
 
