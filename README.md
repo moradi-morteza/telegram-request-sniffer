@@ -178,11 +178,79 @@ make run
 go run cmd/server/main.go
 ```
 
-**Option C: Build binary first**
+**Option C: Build standalone binary first**
 ```bash
 go build -o telegram-sniffer cmd/server/main.go
 ./telegram-sniffer
 ```
+
+You can also run the binary with a custom port:
+```bash
+./telegram-sniffer -port 8080
+```
+
+Or show help options:
+```bash
+./telegram-sniffer -help
+```
+
+**Cross-Compilation (Building for different OS):**
+
+Go allows you to build binaries for different operating systems and architectures:
+
+```bash
+# Build for Linux 64-bit
+GOOS=linux GOARCH=amd64 go build -o telegram-sniffer-linux cmd/server/main.go
+
+# Build for Windows 64-bit
+GOOS=windows GOARCH=amd64 go build -o telegram-sniffer.exe cmd/server/main.go
+
+# Build for macOS 64-bit
+GOOS=darwin GOARCH=amd64 go build -o telegram-sniffer-mac cmd/server/main.go
+
+# Build for macOS Apple Silicon (M1/M2)
+GOOS=darwin GOARCH=arm64 go build -o telegram-sniffer-mac-arm64 cmd/server/main.go
+```
+
+**Build All Platforms at Once (Ready-to-Run Packages):**
+
+You can use the provided build scripts to compile for all platforms (Linux amd64/arm64, Windows amd64, macOS amd64/arm64). The scripts will:
+1. Build each binary
+2. Copy the `public/` folder and `.env` (or `.env.example`) file into a platform-specific directory
+3. Create a compressed `.zip` file in the `releases/` directory containing the binary, `public/` folder, and configuration file
+
+- **On Linux/macOS:**
+  ```bash
+  ./build-all.sh
+  ```
+
+- **On Windows:**
+  ```cmd
+  build-all.bat
+  ```
+
+The compressed `.zip` files will be placed in the `releases/` directory:
+- `releases/telegram-sniffer-linux-amd64.zip`
+- `releases/telegram-sniffer-linux-arm64.zip`
+- `releases/telegram-sniffer-windows-amd64.zip`
+- `releases/telegram-sniffer-macos-amd64.zip`
+- `releases/telegram-sniffer-macos-arm64.zip`
+
+**How to use the released packages:**
+1. Extract the `.zip` file for your target platform
+2. Inside the extracted folder, you will find:
+   - The binary executable (`telegram-sniffer-linux-amd64`, `telegram-sniffer-windows-amd64.exe`, etc.)
+   - The `public/` folder with the dashboard files
+   - The `.env` file (or `.env.example`)
+3. Run the binary from inside that extracted folder:
+   - Linux/macOS: `./telegram-sniffer-linux-amd64 -port 3000`
+   - Windows: `telegram-sniffer-windows-amd64.exe -port 3000`
+
+The server will start and serve the dashboard from `http://localhost:3000` (or your specified port).
+
+The resulting binary is a single file that includes all dependencies and can be run on any machine with the same OS/architecture without needing Go installed.
+
+**Note:** When running the standalone binary, make sure the `public/` folder and `.env` file (if used) are in the same directory as the binary, or the server won't be able to find the dashboard files.
 
 **Option D: Windows batch file**
 ```cmd
@@ -195,7 +263,7 @@ chmod +x run.sh
 ./run.sh
 ```
 
-The server will start on `http://localhost:3000`
+The server will start on `http://localhost:3000` (or the port specified via `-port` flag or `PORT` environment variable)
 
 ---
 

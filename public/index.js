@@ -127,7 +127,8 @@ new Vue({
         }
     },
     mounted() {
-        var urlLocal =  "ws://localhost:3000/ws"
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const urlLocal = `${protocol}//${window.location.host}/ws`;
         const socket = new WebSocket(urlLocal);
         socket.addEventListener('message', (event) => {
             const message = event.data;
