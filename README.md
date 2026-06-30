@@ -178,11 +178,43 @@ make run
 go run cmd/server/main.go
 ```
 
-**Option C: Build binary first**
+**Option C: Build standalone binary first**
 ```bash
 go build -o telegram-sniffer cmd/server/main.go
 ./telegram-sniffer
 ```
+
+You can also run the binary with a custom port:
+```bash
+./telegram-sniffer -port 8080
+```
+
+Or show help options:
+```bash
+./telegram-sniffer -help
+```
+
+**Cross-Compilation (Building for different OS):**
+
+Go allows you to build binaries for different operating systems and architectures:
+
+```bash
+# Build for Linux 64-bit
+GOOS=linux GOARCH=amd64 go build -o telegram-sniffer-linux cmd/server/main.go
+
+# Build for Windows 64-bit
+GOOS=windows GOARCH=amd64 go build -o telegram-sniffer.exe cmd/server/main.go
+
+# Build for macOS 64-bit
+GOOS=darwin GOARCH=amd64 go build -o telegram-sniffer-mac cmd/server/main.go
+
+# Build for macOS Apple Silicon (M1/M2)
+GOOS=darwin GOARCH=arm64 go build -o telegram-sniffer-mac-arm64 cmd/server/main.go
+```
+
+The resulting binary is a single file that includes all dependencies and can be run on any machine with the same OS/architecture without needing Go installed.
+
+**Note:** When running the standalone binary, make sure the `public/` folder and `.env` file (if used) are in the same directory as the binary, or the server won't be able to find the dashboard files.
 
 **Option D: Windows batch file**
 ```cmd
@@ -195,7 +227,7 @@ chmod +x run.sh
 ./run.sh
 ```
 
-The server will start on `http://localhost:3000`
+The server will start on `http://localhost:3000` (or the port specified via `-port` flag or `PORT` environment variable)
 
 ---
 
